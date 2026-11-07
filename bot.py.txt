@@ -1,0 +1,66 @@
+import telebot
+
+# Ваш токен бота
+BOT_TOKEN = "8949559973:AAFn--eqgM6gjcDYcmFnTvbC0SagOUgyuWs"
+bot = telebot.TeleBot(BOT_TOKEN)
+
+
+# Ця функція перехоплює натискання на кнопки в повідомленнях
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+  try:
+    if call.data == "status_done":
+      # Змінюємо статус на "Обслуговано"
+      new_text = call.message.text.replace(
+          "⚡ <b>Статус:</b> ⏳ Не обслуговуваний",
+          "⚡ <b>Статус:</b> ✅ Обслуговано",
+      )
+
+      # Змінюємо кнопку на зворотну, щоб можна було повернути назад
+      markup = telebot.types.InlineKeyboardMarkup()
+      markup.add(
+          telebot.types.InlineKeyboardButton(
+              "⏳ Зробити не обслуговуваним", callback_data="status_undone"
+          )
+      )
+
+      bot.edit_message_text(
+          chat_id=call.message.chat.id,
+          message_id=call.message.message_id,
+          text=new_text,
+          reply_markup=markup,
+          parse_mode="HTML",
+      )
+      bot.answer_callback_query(call.id, "Статус змінено на: Обслуговано!")
+
+    elif call.data == "status_undone":
+      # Повертаємо статус назад на "Не обслуговуваний"
+      new_text = call.message.text.replace(
+          "⚡ <b>Статус:</b> ✅ Обслуговано",
+          "⚡ <b>Статус:</b> ⏳ Не обслуговуваний",
+      )
+
+      markup = telebot.types.InlineKeyboardMarkup()
+      markup.add(
+          telebot.types.InlineKeyboardButton(
+              "⏳ Статус: Не обслуговуваний (Натисніть, щоб змінити)",
+              callback_data="status_done",
+          )
+      )
+
+      bot.edit_message_text(
+          chat_id=call.message.chat.id,
+          message_id=call.message.message_id,
+          text=new_text,
+          reply_markup=markup,
+          parse_mode="HTML",
+      )
+      bot.answer_callback_query(
+          call.id, "Статус змінено на: Не обслуговуваний!"
+      )
+  except Exception as e:
+    print("Помилка:", e)
+
+
+print("Бот запущено і слухає натискання кнопок...")
+bot.polling(none_stop=True)
